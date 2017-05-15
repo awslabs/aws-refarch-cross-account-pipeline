@@ -1,0 +1,115 @@
+#  Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with
+#  the License. A copy of the License is located at
+#      http://aws.amazon.com/apache2.0/
+#  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+#  CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and
+#  limitations under the License.
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Role to be assumed by CodePipeline service cross account
+Parameters:
+  S3Bucket:
+    Description: S3 Bucket in Tools Account, which holds the artifacts built by codebuild
+    Type: String
+  ToolsAccount:
+    Description: AWS AccountNumber for Tools
+    Type: Number
+  CMKARN:
+    Description: ARN of the KMS CMK creates in Tools account
+    Type: String
+Resources:
+  CFRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ToolsAcctCodePipelineCloudFormationRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              AWS:
+                - !Ref ToolsAccount
+            Action:
+              - sts:AssumeRole
+      Path: /
+  CFPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ToolsAcctCodePipelineCloudFormationPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - cloudformation:*
+              - s3:*
+              - iam:PassRole
+            Resource: "*"
+          -
+            Effect: Allow
+            Action:
+              - kms:*
+            Resource: !Ref CMKARN
+      Roles:
+        -
+          !Ref CFRole
+  CFDeployerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub cloudformationdeployer-role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - cloudformation.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+  CFDeployerPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub cloudformationdeployer-policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - lambda:AddPermission
+              - lambda:CreateFunction
+              - lambda:DeleteFunction
+              - lambda:InvokeFunction
+              - lambda:RemovePermission
+              - lambda:UpdateFunctionCode
+              - lambda:GetFunctionConfiguration
+              - lambda:GetFunction
+              - lambda:UpdateFunctionConfiguration
+              - events:* # Required for the sample lambda function to work
+              - iam:CreateRole
+              - iam:CreatePolicy
+              - iam:GetRole
+              - iam:DeleteRole
+              - iam:PutRolePolicy
+              - iam:PassRole
+              - iam:DeleteRolePolicy
+              - cloudformation:*
+            Resource: "*"
+          -
+            Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetBucketPolicy
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+             - !Join ['',['arn:aws:s3:::',!Ref S3Bucket, '/*']]
+             - !Join ['',['arn:aws:s3:::',!Ref S3Bucket]]
+      Roles:
+        -
+          !Ref CFDeployerRole

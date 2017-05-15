@@ -1,0 +1,386 @@
+#  Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with
+#  the License. A copy of the License is located at
+#      http://aws.amazon.com/apache2.0/
+#  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+#  CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and
+#  limitations under the License.
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CodePipeline for the Sample Lambda Function
+Parameters:
+  ProjectName:
+    Description: Name of the Project
+    Type: String
+    Default: sample-lambda
+  S3Bucket:
+    Description: S3 Bucket, which will hold the artifacts
+    Type: String
+  DevAccount:
+    Description: AWS AccountNumber for dev
+    Type: Number
+  TestAccount:
+    Description: AWS AccountNumber for test
+    Type: Number
+  ProductionAccount:
+    Description: AWS AccountNumber for production
+    Type: Number
+  CMKARN:
+    Description: ARN of the KMS CMK creates in Tools account
+    Type: String
+  CrossAccountCondition:
+    Description: Conditionally creates the resources for cross account access
+    Type: String
+    Default: false
+
+Conditions:
+  AddCodeBuildResource: !Equals [ !Ref CrossAccountCondition, true ]
+
+Resources:
+
+  BuildProjectRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-CodeBuildRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+  BuildProjectPolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: S3BucketPolicy
+    Properties:
+      PolicyName: !Sub ${ProjectName}-CodeBuildPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetBucketPolicy
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+             - !Join ['',['arn:aws:s3:::',!Ref S3Bucket, '/*']]
+             - !Join ['',['arn:aws:s3:::',!Ref S3Bucket]]
+          -
+            Effect: Allow
+            Action:
+              - kms:*
+            Resource: !Ref CMKARN
+          -
+            Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+      Roles:
+        -
+          !Ref BuildProjectRole
+  BuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Ref ProjectName
+      Description: !Ref ProjectName
+      EncryptionKey: !Ref CMKARN
+      ServiceRole: !GetAtt BuildProjectRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: linuxContainer
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:2.7.12
+        EnvironmentVariables:
+          - Name: S3Bucket
+            Value: !Ref S3Bucket
+          - Name: KMSKey
+            Value: !Ref CMKARN
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: |
+          version: 0.1
+          phases:
+            install:
+              commands:
+                - printenv
+                - ls -R
+                - pip install -r requirements.txt -t "$PWD"
+            build:
+              commands:
+                - aws cloudformation package --template-file lambda-cloudformation.yaml --s3-bucket $S3Bucket --s3-prefix sample-lambda/codebuild --output-template-file samtemplate.yaml
+          artifacts:
+            files: samtemplate.yaml
+            discard-paths: yes
+
+      TimeoutInMinutes: 10
+      Tags:
+        - Key: Name
+          Value: !Ref ProjectName
+  PipeLineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-codepipeline-role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+  PipelinePolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: S3BucketPolicy
+    Properties:
+      PolicyName: !Sub ${ProjectName}-codepipeline-policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - codepipeline:*
+              - iam:ListRoles
+              - cloudformation:Describe*
+              - cloudFormation:List*
+              - codecommit:List*
+              - codecommit:Get*
+              - codecommit:GitPull
+              - codecommit:UploadArchive
+              - codecommit:CancelUploadArchive
+              - codebuild:BatchGetBuilds
+              - codebuild:StartBuild
+              - cloudformation:CreateStack
+              - cloudformation:DeleteStack
+              - cloudformation:DescribeStacks
+              - cloudformation:UpdateStack
+              - cloudformation:CreateChangeSet
+              - cloudformation:DeleteChangeSet
+              - cloudformation:DescribeChangeSet
+              - cloudformation:ExecuteChangeSet
+              - cloudformation:SetStackPolicy
+              - cloudformation:ValidateTemplate
+              - iam:PassRole
+              - s3:ListAllMyBuckets
+              - s3:GetBucketLocation
+            Resource:
+              - "*"
+          -
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+            Resource: !Ref CMKARN
+          -
+            Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetBucketPolicy
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+             - !Join ['',['arn:aws:s3:::',!Ref S3Bucket, '/*']]
+             - !Join ['',['arn:aws:s3:::',!Ref S3Bucket]]
+          -
+            Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Resource:
+              - !Sub arn:aws:iam::${DevAccount}:role/ToolsAcctCodePipelineCodeCommitRole
+              - !Sub arn:aws:iam::${ProductionAccount}:role/ToolsAcctCodePipelineCloudFormationRole
+              - !Sub arn:aws:iam::${TestAccount}:role/ToolsAcctCodePipelineCloudFormationRole
+
+      Roles:
+        -
+          !Ref PipeLineRole
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn: !GetAtt PipeLineRole.Arn
+      Name: !Ref AWS::StackName
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: App
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              Configuration:
+                RepositoryName: !Ref ProjectName
+                BranchName: master
+              OutputArtifacts:
+                - Name: SCCheckoutArtifact
+              RunOrder: 1
+              #RoleArn: !Sub arn:aws:iam::${DevAccount}:role/ToolsAcctCodePipelineCodeCommitRole
+              RoleArn:
+                  Fn::If:
+                  - AddCodeBuildResource
+                  - !Sub arn:aws:iam::${DevAccount}:role/ToolsAcctCodePipelineCodeCommitRole
+                  - !Ref AWS::NoValue
+        -
+          Name: Build
+          Actions:
+          -
+            Name: Build
+            ActionTypeId:
+              Category: Build
+              Owner: AWS
+              Version: 1
+              Provider: CodeBuild
+            Configuration:
+              ProjectName: !Ref BuildProject
+            RunOrder: 1
+            InputArtifacts:
+              - Name: SCCheckoutArtifact
+            OutputArtifacts:
+              - Name: BuildOutput
+            #REMOVE:RoleArn: arn:aws:iam::485873893626:role/ToolsAcctCodePipelineCodeCommitRole
+        - Name: DeployToTest
+          Actions:
+            - Name: CreateChangeSetTest
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              Configuration:
+                ChangeSetName: sample-lambda-dev
+                ActionMode: CHANGE_SET_REPLACE
+                StackName: sample-lambda-dev
+                Capabilities: CAPABILITY_NAMED_IAM
+                TemplatePath: BuildOutput::samtemplate.yaml
+                #RoleArn: !Sub arn:aws:iam::${TestAccount}:role/cloudformationdeployer-role
+                RoleArn:
+                  Fn::If:
+                  - AddCodeBuildResource
+                  - !Sub arn:aws:iam::${TestAccount}:role/cloudformationdeployer-role
+                  - !Ref AWS::NoValue
+              InputArtifacts:
+                - Name: BuildOutput
+              RunOrder: 1
+              #RoleArn: !Sub arn:aws:iam::${TestAccount}:role/ToolsAcctCodePipelineCloudFormationRole
+              RoleArn:
+                  Fn::If:
+                  - AddCodeBuildResource
+                  - !Sub arn:aws:iam::${TestAccount}:role/ToolsAcctCodePipelineCloudFormationRole
+                  - !Ref AWS::NoValue
+            - Name: DeployChangeSetTest
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              Configuration:
+                ChangeSetName: sample-lambda-dev
+                ActionMode: CHANGE_SET_EXECUTE
+                StackName: sample-lambda-dev
+                #RoleArn: !Sub arn:aws:iam::${TestAccount}:role/cloudformationdeployer-role
+                RoleArn:
+                  Fn::If:
+                  - AddCodeBuildResource
+                  - !Sub arn:aws:iam::${TestAccount}:role/cloudformationdeployer-role
+                  - !Ref AWS::NoValue
+              InputArtifacts:
+                - Name: BuildOutput
+              RunOrder: 2
+              #RoleArn: !Sub arn:aws:iam::${TestAccount}:role/ToolsAcctCodePipelineCloudFormationRole
+              RoleArn:
+                  Fn::If:
+                  - AddCodeBuildResource
+                  - !Sub arn:aws:iam::${TestAccount}:role/ToolsAcctCodePipelineCloudFormationRole
+                  - !Ref AWS::NoValue
+        - Name: DeployToProduction
+          Actions:
+            - Name: CreateChangeSetProd
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              Configuration:
+                ChangeSetName: sample-lambda-test
+                ActionMode: CHANGE_SET_REPLACE
+                StackName: sample-lambda-test
+                Capabilities: CAPABILITY_NAMED_IAM
+                TemplatePath: BuildOutput::samtemplate.yaml
+                #RoleArn: !Sub arn:aws:iam::${ProductionAccount}:role/cloudformationdeployer-role
+                RoleArn:
+                  Fn::If:
+                  - AddCodeBuildResource
+                  - !Sub arn:aws:iam::${ProductionAccount}:role/cloudformationdeployer-role
+                  - !Ref AWS::NoValue
+              InputArtifacts:
+                - Name: BuildOutput
+              RunOrder: 1
+              #RoleArn: !Sub arn:aws:iam::${ProductionAccount}:role/ToolsAcctCodePipelineCloudFormationRole
+              RoleArn:
+                  Fn::If:
+                  - AddCodeBuildResource
+                  - !Sub arn:aws:iam::${ProductionAccount}:role/ToolsAcctCodePipelineCloudFormationRole
+                  - !Ref AWS::NoValue
+            - Name: DeployChangeSetProd
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: CloudFormation
+              Configuration:
+                ChangeSetName: sample-lambda-test
+                ActionMode: CHANGE_SET_EXECUTE
+                StackName: sample-lambda-test
+                #RoleArn: !Sub arn:aws:iam::${ProductionAccount}:role/cloudformationdeployer-role
+                RoleArn:
+                  Fn::If:
+                  - AddCodeBuildResource
+                  - !Sub arn:aws:iam::${ProductionAccount}:role/cloudformationdeployer-role
+                  - !Ref AWS::NoValue
+              InputArtifacts:
+                - Name: BuildOutput
+              RunOrder: 2
+              #RoleArn: !Sub arn:aws:iam::${ProductionAccount}:role/ToolsAcctCodePipelineCloudFormationRole
+              RoleArn:
+                Fn::If:
+                - AddCodeBuildResource
+                - !Sub arn:aws:iam::${ProductionAccount}:role/ToolsAcctCodePipelineCloudFormationRole
+                - !Ref AWS::NoValue
+
+      ArtifactStore:
+        Type: S3
+        Location: !Ref S3Bucket
+        EncryptionKey:
+          Id: !Ref CMKARN
+          Type: KMS
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Statement:
+          -
+            Action:
+              - s3:*
+            Effect: Allow
+            Resource:
+              - !Sub arn:aws:s3:::${S3Bucket}
+              - !Sub arn:aws:s3:::${S3Bucket}/*
+            Principal:
+              AWS:
+                - !Sub arn:aws:iam::${DevAccount}:role/ToolsAcctCodePipelineCodeCommitRole
+                - !Sub arn:aws:iam::${TestAccount}:role/ToolsAcctCodePipelineCloudFormationRole
+                - !Sub arn:aws:iam::${TestAccount}:role/cloudformationdeployer-role
+                - !Sub arn:aws:iam::${ProductionAccount}:role/ToolsAcctCodePipelineCloudFormationRole
+                - !Sub arn:aws:iam::${ProductionAccount}:role/cloudformationdeployer-role
+                - !GetAtt [BuildProjectRole,Arn]
