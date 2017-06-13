@@ -12,15 +12,15 @@ is securely handled by [AWS CodePipeline](code-pipeline-url).
 
 #### 1. Clone the sample Lambda function GitHub repository
 
-[Clone](https://help.github.com/articles/cloning-a-repository/) the [AWS LAMBDA sample application](https://github.com/awslabs/ecr-cleanup-lambda.git) GitHub repository.
+[Clone](https://help.github.com/articles/cloning-a-repository/) the [AWS LAMBDA sample application](https://github.com/awslabs/aws-pipeline-to-service-catalog.git) GitHub repository.
 
 From your terminal application, execute the following command:
 
 ```console
-git clone https://github.com/awslabs/ecr-cleanup-lambda.git
+git clone https://github.com/awslabs/aws-pipeline-to-service-catalog.git
 ```
 
-This creates a directory named `ecr-cleanup-lambda` in your current directory, which contains the code for the AWS Lambda function sample application.
+This creates a directory named `aws-pipeline-to-service-catalog` in your current directory, which contains the code for the AWS Lambda function sample application.
 
 #### 2. Create [AWS CodeCommit](code-commit-url) repository in Development Account
 
