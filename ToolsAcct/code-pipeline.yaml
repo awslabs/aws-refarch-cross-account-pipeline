@@ -98,7 +98,7 @@ Resources:
       Environment:
         Type: linuxContainer
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/python:2.7.12
+        Image: aws/codebuild/ruby:2.3.1
         EnvironmentVariables:
           - Name: S3Bucket
             Value: !Ref S3Bucket
