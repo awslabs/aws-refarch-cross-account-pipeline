@@ -98,7 +98,7 @@ Resources:
       Environment:
         Type: linuxContainer
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/python:2.7.12
+        Image: aws/codebuild/ruby:2.3.1
         EnvironmentVariables:
           - Name: S3Bucket
             Value: !Ref S3Bucket
@@ -107,20 +107,16 @@ Resources:
       Source:
         Type: CODEPIPELINE
         BuildSpec: |
-          version: 0.1
+          version: 0.2
+
           phases:
             install:
               commands:
-                - printenv
-                - ls -R
-                - pip install -r requirements.txt -t "$PWD"
+                - gem install cfn-nag
             build:
               commands:
-                - aws cloudformation package --template-file lambda-cloudformation.yaml --s3-bucket $S3Bucket --s3-prefix sample-lambda/codebuild --output-template-file samtemplate.yaml
-          artifacts:
-            files: samtemplate.yaml
-            discard-paths: yes
-
+                #- aws cloudformation validate-template --template-body file://$(pwd)/template.yaml
+                - cfn_nag_scan --input-path ./template.yaml 
       TimeoutInMinutes: 10
       Tags:
         - Key: Name
