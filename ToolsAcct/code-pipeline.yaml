@@ -113,7 +113,7 @@ Resources:
               commands:
                 - printenv
                 - ls -R
-                - pip install -r requirements.txt -t "$PWD"
+                - pip install -r scripts/requirements.txt -t "$PWD"
             build:
               commands:
                 - aws cloudformation package --template-file lambda-cloudformation.yaml --s3-bucket $S3Bucket --s3-prefix sample-lambda/codebuild --output-template-file samtemplate.yaml
