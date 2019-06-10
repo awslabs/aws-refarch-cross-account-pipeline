@@ -11,13 +11,13 @@ Description: Creates a CMK in KMS and grants access to other accounts
 Parameters:
   DevAccount:
     Description: AWS AccountNumber for dev
-    Type: Number
+    Type: String
   TestAccount:
     Description: AWS AccountNumber for test
-    Type: Number
+    Type: String
   ProductionAccount:
     Description: AWS AccountNumber for production
-    Type: Number
+    Type: String
   ProjectName:
     Description: Name of the Project
     Type: String
