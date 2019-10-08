@@ -1,12 +1,12 @@
 # Reference Architecture: Cross Account AWS CodePipeline
 
-This reference architecture demonstrates how to push code hosted in [AWS CodeCommit](code-commit-url) repository in Development Account,
-use [AWS CodeBuild](code-build-url) to do application build, store the output artifacts in S3Bucket and deploy these artifacts to Test
-and Production Accounts using [AWS CloudFormation](clouformation-url). This orchestration of code movement from code checkin to deployment
-is securely handled by [AWS CodePipeline](code-pipeline-url).
+This reference architecture demonstrates how to push code hosted in [AWS CodeCommit][code-commit-url] repository in Development Account,
+use [AWS CodeBuild][code-build-url] to do application build, store the output artifacts in S3Bucket and deploy these artifacts to Test
+and Production Accounts using [AWS CloudFormation][cloudformation-url]. This orchestration of code movement from code checkin to deployment
+is securely handled by [AWS CodePipeline][code-pipeline-url].
 
 
-[![](images/architecture.png)][architecture]
+![](images/architecture.png)
 
 ## Running the example
 
@@ -22,7 +22,7 @@ git clone https://github.com/awslabs/aws-pipeline-to-service-catalog.git
 
 This creates a directory named `aws-pipeline-to-service-catalog` in your current directory, which contains the code for the AWS Lambda function sample application.
 
-#### 2. Create [AWS CodeCommit](code-commit-url) repository in Development Account
+#### 2. Create [AWS CodeCommit][code-commit-url] repository in Development Account
 
 Follow the [instructions here](http://docs.aws.amazon.com/codecommit/latest/userguide/getting-started.html#getting-started-create-repo) to create a CodeCommit repository
 in the Development Account.Name your repository as sample-lambda
@@ -57,5 +57,5 @@ git push AWSCodeCommit master
 [code-commit-url]: https://aws.amazon.com/devops/continuous-delivery/
 [code-build-url]: https://aws.amazon.com/codebuild/
 [code-pipeline-url]: https://aws.amazon.com/codepipeline/
-[clouformation-url]: https://aws.amazon.com/cloudformation/
+[cloudformation-url]: https://aws.amazon.com/cloudformation/
 [lambda-url]: https://aws.amazon.com/lambda/
