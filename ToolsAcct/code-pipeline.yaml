@@ -68,6 +68,7 @@ Resources:
               - s3:GetBucketPolicy
               - s3:GetObject
               - s3:ListBucket
+
             Resource:
              - !Join ['',['arn:aws:s3:::',!Ref S3Bucket, '/*']]
              - !Join ['',['arn:aws:s3:::',!Ref S3Bucket]]
@@ -98,7 +99,7 @@ Resources:
       Environment:
         Type: linuxContainer
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/python:2.7.12
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
         EnvironmentVariables:
           - Name: S3Bucket
             Value: !Ref S3Bucket
@@ -107,19 +108,20 @@ Resources:
       Source:
         Type: CODEPIPELINE
         BuildSpec: |
-          version: 0.1
+          version: 0.2
           phases:
             install:
-              commands:
-                - printenv
-                - ls -R
-                - pip install -r scripts/requirements.txt -t "$PWD"
+              runtime-versions:
+                  python: 3.7
             build:
               commands:
-                - aws cloudformation package --template-file lambda-cloudformation.yaml --s3-bucket $S3Bucket --s3-prefix sample-lambda/codebuild --output-template-file samtemplate.yaml
+                - pip install --upgrade pip
+                - pip install pipenv --user
+                - pip install awscli aws-sam-cli
+                - sam package --template-file template.yaml --s3-bucket $S3Bucket --output-template-file packaged-template.yml --region $AWS_REGION
           artifacts:
-            files: samtemplate.yaml
-            discard-paths: yes
+            files:
+              - packaged-template.yml
 
       TimeoutInMinutes: 10
       Tags:
@@ -247,7 +249,6 @@ Resources:
               - Name: SCCheckoutArtifact
             OutputArtifacts:
               - Name: BuildOutput
-            #REMOVE:RoleArn: arn:aws:iam::485873893626:role/ToolsAcctCodePipelineCodeCommitRole
         - Name: DeployToTest
           Actions:
             - Name: CreateChangeSetTest
@@ -257,11 +258,11 @@ Resources:
                 Version: 1
                 Provider: CloudFormation
               Configuration:
-                ChangeSetName: sample-lambda-dev
+                ChangeSetName: sample-lambda-test
                 ActionMode: CHANGE_SET_REPLACE
-                StackName: sample-lambda-dev
+                StackName: sample-lambda-test
                 Capabilities: CAPABILITY_NAMED_IAM
-                TemplatePath: BuildOutput::samtemplate.yaml
+                TemplatePath: BuildOutput::packaged-template.yml
                 #RoleArn: !Sub arn:aws:iam::${TestAccount}:role/cloudformationdeployer-role
                 RoleArn:
                   Fn::If:
@@ -284,9 +285,9 @@ Resources:
                 Version: 1
                 Provider: CloudFormation
               Configuration:
-                ChangeSetName: sample-lambda-dev
+                ChangeSetName: sample-lambda-test
                 ActionMode: CHANGE_SET_EXECUTE
-                StackName: sample-lambda-dev
+                StackName: sample-lambda-test
                 #RoleArn: !Sub arn:aws:iam::${TestAccount}:role/cloudformationdeployer-role
                 RoleArn:
                   Fn::If:
@@ -302,6 +303,17 @@ Resources:
                   - AddCodeBuildResource
                   - !Sub arn:aws:iam::${TestAccount}:role/ToolsAcctCodePipelineCloudFormationRole
                   - !Ref AWS::NoValue
+        - Name: ApproveDeployProd
+          Actions:
+          -
+            Name: ApproveDeployProd
+            ActionTypeId:
+              Category: Approval
+              Owner: AWS
+              Version: 1
+              Provider: Manual
+            Configuration:
+              CustomData: "Log into the TEST account and test out your changes before approving."
         - Name: DeployToProduction
           Actions:
             - Name: CreateChangeSetProd
@@ -311,11 +323,11 @@ Resources:
                 Version: 1
                 Provider: CloudFormation
               Configuration:
-                ChangeSetName: sample-lambda-test
+                ChangeSetName: sample-lambda-production
                 ActionMode: CHANGE_SET_REPLACE
-                StackName: sample-lambda-test
+                StackName: sample-lambda-production
                 Capabilities: CAPABILITY_NAMED_IAM
-                TemplatePath: BuildOutput::samtemplate.yaml
+                TemplatePath: BuildOutput::packaged-template.yml
                 #RoleArn: !Sub arn:aws:iam::${ProductionAccount}:role/cloudformationdeployer-role
                 RoleArn:
                   Fn::If:
@@ -338,9 +350,9 @@ Resources:
                 Version: 1
                 Provider: CloudFormation
               Configuration:
-                ChangeSetName: sample-lambda-test
+                ChangeSetName: sample-lambda-production
                 ActionMode: CHANGE_SET_EXECUTE
-                StackName: sample-lambda-test
+                StackName: sample-lambda-production
                 #RoleArn: !Sub arn:aws:iam::${ProductionAccount}:role/cloudformationdeployer-role
                 RoleArn:
                   Fn::If:

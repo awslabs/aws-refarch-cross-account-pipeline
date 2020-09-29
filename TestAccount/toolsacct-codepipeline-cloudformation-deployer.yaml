@@ -90,7 +90,10 @@ Resources:
               - lambda:GetFunctionConfiguration
               - lambda:GetFunction
               - lambda:UpdateFunctionConfiguration
-              - events:* # Required for the sample lambda function to work
+              - lambda:ListTags
+              - lambda:TagResource
+              - lambda:UnTagResource
+              # - events:* # Required for the sample lambda function to work
               - iam:CreateRole
               - iam:CreatePolicy
               - iam:GetRole
@@ -98,7 +101,13 @@ Resources:
               - iam:PutRolePolicy
               - iam:PassRole
               - iam:DeleteRolePolicy
+              - iam:AttachRolePolicy
               - cloudformation:*
+              - iam:DetachRolePolicy
+              - apigateway:POST # Create API.
+              - apigateway:GET # Get API info.
+              - apigateway:PATCH # Update API resources.
+              - apigateway:DELETE # Delete API incase of rollback. 
             Resource: "*"
           -
             Effect: Allow
