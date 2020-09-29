@@ -79,7 +79,7 @@ Resources:
   KMSAlias:
     Type: AWS::KMS::Alias
     Properties:
-      AliasName: !Sub alias/codepipeline-crossaccounts1
+      AliasName: !Sub alias/codepipeline-crossaccounts
       TargetKeyId: !Ref KMSKey
   ArtifactBucket:
     Type: AWS::S3::Bucket
