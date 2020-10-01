@@ -1,7 +1,7 @@
 # Reference Architecture: Cross Account AWS CodePipeline
 
-This reference architecture demonstrates how to push code hosted in [AWS CodeCommit](code-commit-url) repository in Development Account,
-use [AWS CodeBuild](code-build-url) to do application build, store the output artifacts in S3Bucket and deploy these artifacts to a Test AWS account, validate your deployment then approve the changes to be deployed to the Production Account using [AWS CloudFormation](clouformation-url). This orchestration of code movement from code checkin to deployment is securely handled by [AWS CodePipeline](code-pipeline-url).
+This reference architecture demonstrates how to push code hosted in [AWS CodeCommit](https://aws.amazon.com/codecommit/) repository in Development Account,
+use [AWS CodeBuild](https://aws.amazon.com/codebuild/) to do application build, store the output artifacts in S3Bucket and deploy these artifacts to a Test AWS account, validate your deployment then approve the changes to be deployed to the Production Account using [AWS CloudFormation](https://aws.amazon.com/cloudformation/). This orchestration of code movement from code checkin to deployment is securely handled by [AWS CodePipeline](https://aws.amazon.com/codepipeline/).
 
 ![](images/CrossAccBlog-WithText.png)
 
@@ -86,10 +86,3 @@ Once you have your pipeline configured [as per the blog post](https://aws.amazon
 #### Next Steps
 * If you want to deploy a different type of application, you will need to edit the buildspec file defined in the [`code-pipeline.yaml`](https://github.com/awslabs/aws-refarch-cross-account-pipeline/blob/master/ToolsAcct/code-pipeline.yaml) file.
     * You will also need to change the permissions of the roles deployed to the test/dev accounts depending on what type of resources you are deploying. This is in the [`toolsacct-codepipeline-cloudformation-deployer.yaml`](https://github.com/awslabs/aws-refarch-cross-account-pipeline/blob/master/TestAccount/toolsacct-codepipeline-cloudformation-deployer.yaml#L74) file which gets deployed to the Test & Prod accounts in step 3 of the [blog instructions](https://aws.amazon.com/blogs/devops/aws-building-a-secure-cross-account-continuous-delivery-pipeline/).
-
-
-[code-commit-url]: https://aws.amazon.com/devops/continuous-delivery/
-[code-build-url]: https://aws.amazon.com/codebuild/
-[code-pipeline-url]: https://aws.amazon.com/codepipeline/
-[clouformation-url]: https://aws.amazon.com/cloudformation/
-[lambda-url]: https://aws.amazon.com/lambda/
