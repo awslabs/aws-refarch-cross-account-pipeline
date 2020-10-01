@@ -1,6 +1,6 @@
 # Reference Architecture: Cross Account AWS CodePipeline
 
-This reference architecture demonstrates how to push code hosted in [AWS CodeCommit](https://aws.amazon.com/devops/continuous-delivery/) repository in Development Account,
+This reference architecture demonstrates how to push code hosted in [AWS CodeCommit](https://aws.amazon.com/codecommit/) repository in Development Account,
 use [AWS CodeBuild](https://aws.amazon.com/codebuild/) to do application build, store the output artifacts in S3Bucket and deploy these artifacts to a Test AWS account, validate your deployment then approve the changes to be deployed to the Production Account using [AWS CloudFormation](https://aws.amazon.com/cloudformation/). This orchestration of code movement from code checkin to deployment is securely handled by [AWS CodePipeline](https://aws.amazon.com/codepipeline/).
 
 ![](images/CrossAccBlog-WithText.png)
