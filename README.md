@@ -50,7 +50,7 @@ Follow the [instructions here](http://docs.aws.amazon.com/codecommit/latest/user
 From your terminal application, execute the following command. You may refer [here](http://docs.aws.amazon.com/codecommit/latest/userguide/how-to-create-repository.html#how-to-create-repository-cli) for further details on installing the AWS CLI if needed.
 
 ```console
-aws codecommit create-repository --repository-name sample-lambda --repository-description "Sample Serverless App"
+aws codecommit create-repository --repository-name sample-lambda --repository-description "Sample Serverless App" --profile {{DEV-ACCOUNT-PROFILE}}
 ```
 
 Note the cloneUrlHttp URL in the response from above CLI.
