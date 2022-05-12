@@ -17,6 +17,25 @@ use [AWS CodeBuild](https://aws.amazon.com/codebuild/) to do application build, 
     * Development
     * Test
     * Production
+5. Add IAM permissions for cloudformation usage
+5.1 Tools accounts 
+- Login to AWS Console as Tools Account User
+- Go to IAM 
+- Click "Roles"
+- Click "Create Role Button"
+- Choose - Trusted entity type - "AWS Account", An Aws account "This account"
+- Clik button "Next"
+- In filter field enter "cloudformation" 
+- Choose "AWSCloudFormationFullAccess"   
+- Click button "Next"
+- Click "Add tag" button
+- Enter "environment", "tools"
+- Enter "way", "manual"
+- Enter "purpose", "permisions"
+- Enter "creator", {your_username}
+- Enter "Role name", "Cloud_Formation_Full_Access"
+- Enter "Role descriprion", "allow all users from this account perform cloud formation stacs"
+- Click "Create Role" button
 
 #### 1. Create a sample application using Serverless Application Model (SAM). 
 
@@ -86,3 +105,40 @@ Once you have your pipeline configured [as per the blog post](https://aws.amazon
 #### Next Steps
 * If you want to deploy a different type of application, you will need to edit the buildspec file defined in the [`code-pipeline.yaml`](https://github.com/awslabs/aws-refarch-cross-account-pipeline/blob/master/ToolsAcct/code-pipeline.yaml) file.
     * You will also need to change the permissions of the roles deployed to the test/dev accounts depending on what type of resources you are deploying. This is in the [`toolsacct-codepipeline-cloudformation-deployer.yaml`](https://github.com/awslabs/aws-refarch-cross-account-pipeline/blob/master/TestAccount/toolsacct-codepipeline-cloudformation-deployer.yaml#L74) file which gets deployed to the Test & Prod accounts in step 3 of the [blog instructions](https://aws.amazon.com/blogs/devops/aws-building-a-secure-cross-account-continuous-delivery-pipeline/).
+
+# Problems
+
+## No default region
+
+
+### Description
+
+After run command 
+
+```bash
+single-click-cross-account-pipeline.sh
+```
+Error log:
+
+You must specify a region. You can also configure your region by running "aws configure".
+
+Solution: 
+
+aws configure set region eu-west-1 --profile default 
+aws configure set region eu-west-1 --profile ${tools_account_id}
+aws configure set region eu-west-1 --profile ${dev_account_id}
+aws configure set region eu-west-1 --profile ${test_account_id}
+aws configure set region eu-west-1 --profile ${prod_account_id}
+
+## Access Denied
+
+Command:
+
+```bash
+single-click-cross-account-pipeline.sh
+```
+
+Error output:
+An error occurred (AccessDenied) when calling the DescribeStacks operation: User: arn:aws:sts::374925447540:assumed-role/AWSReservedSSO_AWSOrganizationsFullAccess_ebce3644c0d9b654/przs@tlen.pl is not authorized to perform: cloudformation:DescribeStacks on resource: arn:aws:cloudformation:eu-west-1:374925447540:stack/pre-reqs/* because no identity-based policy allows the cloudformation:DescribeStacks action
+
+Solution:
