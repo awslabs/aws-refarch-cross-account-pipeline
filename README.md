@@ -7,6 +7,7 @@ use [AWS CodeBuild](https://aws.amazon.com/codebuild/) to do application build, 
 
 > Notes from masmix
 > Purpose of this for is focus on security approach from https://github.com/awslabs/aws-refarch-cross-account-pipeline
+> It's mean that we focused on learn AWS services step by step using CLI with minimized usage AWS Console
 
 ## Running the example
 > You need to create the CodeCommit repository (steps below) before making the pipeline infrastructure. 
@@ -20,44 +21,9 @@ use [AWS CodeBuild](https://aws.amazon.com/codebuild/) to do application build, 
     * Development
     * Test
     * Production
-5. Create IAM role for this infrastructure deployment 
-5.1 Tools accounts with admin permissions
-- Login to AWS Console as Tools Account User
-- Go to IAM 
-- Click "Roles"
-- Click "Create Role Button"
-- Choose - Trusted entity type - "AWS Account", An Aws account "This account"
-- Clik button "Next"
-- In filter field enter "cloudformation" 
-- Choose "AWSCloudFormationFullAccess"   
-- Click button "Next"
-- Click "Add tag" button
-- Enter "environment", "tools"
-- Enter "way", "manual"
-- Enter "purpose", "permisions"
-- Enter "creator", {your_username}
-- Enter "Role name", "aws-refarch-cross-account-pipeline-service-role"
-- Enter "Role descriprion", "service role for aws-refarch-cross-account "
-- Click "Create Role" button
+5. Create permissions for tools account
 
-5.2 Get and configure Session Token Credentials
-
-Get session tokens 
-```bash
-aws sts assume-role --role-arn  arn:aws:iam::{Tools_account_id}}:role/aws-refarch-cross-account-pipeline-service-role  --role-session-name cross-account-deployer --profile tools_admin
-```
-
-Configure aws credentials with above aws access key and aws access key
-```bash 
-aws configure --profile tools_deployer 
-```
-
-Set up session token 
-
-```bash 
-aws configure set aws_session_token "token_value_from_above_aws_sts_command" --profile tools_deployer
-```
-
+Please follow the instructions from Permissions-accounts-set-up/Tools/README.md
 
 #### 1. Create a sample application using Serverless Application Model (SAM). 
 
