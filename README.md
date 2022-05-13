@@ -5,6 +5,9 @@ use [AWS CodeBuild](https://aws.amazon.com/codebuild/) to do application build, 
 
 ![](images/CrossAccBlog-WithText.png)
 
+> Notes from masmix
+> Purpose of this for is focus on security approach from https://github.com/awslabs/aws-refarch-cross-account-pipeline
+
 ## Running the example
 > You need to create the CodeCommit repository (steps below) before making the pipeline infrastructure. 
 > When creating the pipeline infrastructure, you can use the `single-click-cross-account-pipeline.sh` script or else follow the "Walkthrough" section of the [blog post](https://aws.amazon.com/blogs/devops/aws-building-a-secure-cross-account-continuous-delivery-pipeline/). 
@@ -17,8 +20,8 @@ use [AWS CodeBuild](https://aws.amazon.com/codebuild/) to do application build, 
     * Development
     * Test
     * Production
-5. Add IAM permissions for cloudformation usage
-5.1 Tools accounts 
+5. Create IAM role for this infrastructure deployment 
+5.1 Tools accounts with admin permissions
 - Login to AWS Console as Tools Account User
 - Go to IAM 
 - Click "Roles"
@@ -33,9 +36,28 @@ use [AWS CodeBuild](https://aws.amazon.com/codebuild/) to do application build, 
 - Enter "way", "manual"
 - Enter "purpose", "permisions"
 - Enter "creator", {your_username}
-- Enter "Role name", "Cloud_Formation_Full_Access"
-- Enter "Role descriprion", "allow all users from this account perform cloud formation stacs"
+- Enter "Role name", "aws-refarch-cross-account-pipeline-service-role"
+- Enter "Role descriprion", "service role for aws-refarch-cross-account "
 - Click "Create Role" button
+
+5.2 Get and configure Session Token Credentials
+
+Get session tokens 
+```bash
+aws sts assume-role --role-arn  arn:aws:iam::{Tools_account_id}}:role/aws-refarch-cross-account-pipeline-service-role  --role-session-name cross-account-deployer --profile tools_admin
+```
+
+Configure aws credentials with above aws access key and aws access key
+```bash 
+aws configure --profile tools_deployer 
+```
+
+Set up session token 
+
+```bash 
+aws configure set aws_session_token "token_value_from_above_aws_sts_command" --profile tools_deployer
+```
+
 
 #### 1. Create a sample application using Serverless Application Model (SAM). 
 
