@@ -23,7 +23,7 @@ use [AWS CodeBuild](https://aws.amazon.com/codebuild/) to do application build, 
     * Production
 5. Create permissions for tools account (optional)
 
-If you want to create IAM user and role only for this particular deployment please follow the instructions from Permissions-accounts-set-up/Tools/README.md
+If you want to create IAM user and role only for this particular deployment please follow the instructions from [Set up additional tools account permissions](Permissions-accounts-set-up/Tools/README.md)
 If your profile user has enough permissions, this step can be skipped. 
 
 #### 1. Create a sample application using Serverless Application Model (SAM). 
@@ -131,3 +131,5 @@ Error output:
 An error occurred (AccessDenied) when calling the DescribeStacks operation: User: arn:aws:sts::374925447540:assumed-role/AWSReservedSSO_AWSOrganizationsFullAccess_ebce3644c0d9b654/przs@tlen.pl is not authorized to perform: cloudformation:DescribeStacks on resource: arn:aws:cloudformation:eu-west-1:374925447540:stack/pre-reqs/* because no identity-based policy allows the cloudformation:DescribeStacks action
 
 Solution:
+
+Please follow the instructions from [Set up additional tools account permissions](Permissions-accounts-set-up/Tools/README.md)
