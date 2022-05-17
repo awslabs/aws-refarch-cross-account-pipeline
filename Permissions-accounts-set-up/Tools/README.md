@@ -66,7 +66,7 @@ aws sts get-caller-identity --profile aleph_tools_admin
 ```
 - asume role
 ```sh
-aws sts assume-role --role-arn "arn:aws:iam::374925447540:role/aws-refarch-cross-account-pipeline-service-role-2" --role-session-name AWSCLI-Session --profile tools_admin
+aws sts assume-role --role-arn "arn:aws:iam::{YOUR_TOOLS_ACCOUNT_ID}:role/aws-refarch-cross-account-pipeline-service-role-2" --role-session-name AWSCLI-Session --profile tools_admin
 ```
 
 Example ouput:
@@ -89,8 +89,8 @@ Example output
 ```json
 {
     "UserId": "AROAVOS2MKF2GKH3OSZBB:AWSCLI-Session",
-    "Account": "374925447540",
-    "Arn": "arn:aws:sts::374925447540:assumed-role/aws-refarch-cross-account-pipeline-service-role-2/AWSCLI-Session"
+    "Account": "{YOUR_TOOLS_ACCOUNT_ID}",
+    "Arn": "arn:aws:sts::{YOUR_TOOLS_ACCOUNT_ID}:assumed-role/aws-refarch-cross-account-pipeline-service-role-2/AWSCLI-Session"
 }
 ```
 # Finish

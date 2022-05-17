@@ -5,10 +5,6 @@ use [AWS CodeBuild](https://aws.amazon.com/codebuild/) to do application build, 
 
 ![](images/CrossAccBlog-WithText.png)
 
-> Notes from masmix
-> Purpose of this for is focus on security approach from https://github.com/awslabs/aws-refarch-cross-account-pipeline
-> It's mean that we focused on learn AWS services step by step using CLI with minimized usage AWS Console
-
 ## Running the example
 > You need to create the CodeCommit repository (steps below) before making the pipeline infrastructure. 
 > When creating the pipeline infrastructure, you can use the `single-click-cross-account-pipeline.sh` script or else follow the "Walkthrough" section of the [blog post](https://aws.amazon.com/blogs/devops/aws-building-a-secure-cross-account-continuous-delivery-pipeline/). 
