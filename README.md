@@ -21,9 +21,10 @@ use [AWS CodeBuild](https://aws.amazon.com/codebuild/) to do application build, 
     * Development
     * Test
     * Production
-5. Create permissions for tools account
+5. Create permissions for tools account (optional)
 
-Please follow the instructions from Permissions-accounts-set-up/Tools/README.md
+If you want to create IAM user and role only for this particular deployment please follow the instructions from Permissions-accounts-set-up/Tools/README.md
+If your profile user has enough permissions, this step can be skipped. 
 
 #### 1. Create a sample application using Serverless Application Model (SAM). 
 

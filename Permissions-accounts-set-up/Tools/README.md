@@ -1,6 +1,8 @@
 # Purpose 
 
-Here we will configure permissions for tools account
+> Below steps are optional if your IAM user have not enough permissions cloudformation, s3 and kms services to create all required resources from
+> [main script](../../single-click-cross-account-pipeline.sh) 
+> Here we will configure permissions for tools account for IAM role only for this particular permission.
 
 # Prereqisities
 
@@ -64,14 +66,36 @@ aws sts get-caller-identity --profile aleph_tools_admin
 ```
 - asume role
 ```sh
-aws sts assume-role --role-arn "arn:aws:iam::374925447540:role/aws-refarch-cross-account-pipeline-service-role-2" --role-session-name AWSCLI-Session --profile aleph_tools_admin
+aws sts assume-role --role-arn "arn:aws:iam::374925447540:role/aws-refarch-cross-account-pipeline-service-role-2" --role-session-name AWSCLI-Session --profile tools_admin
 ```
-- export keys and tokens to environment variables
+
+Example ouput:
+
+
+- Paste the following text in your AWS credentials file (typically found at ~/.aws/credentials). 
 ```sh
-export AWS_ACCESS_KEY_ID=RoleAccessKeyID
-export AWS_SECRET_ACCESS_KEY=RoleSecretKey
-export AWS_SESSION_TOKEN=RoleSessionToken
+[tools_admin_deployer]
+aws_access_key_id = accessKeyIdValue
+aws_secret_access_key = secretAccessKeyValue
+aws_session_token = sessionTokenValue
+
 ```
+
+- verify 
+```sh
+aws sts get-caller-identity --profile tools_admin_deployer
+```
+Example output
+```json
+{
+    "UserId": "AROAVOS2MKF2GKH3OSZBB:AWSCLI-Session",
+    "Account": "374925447540",
+    "Arn": "arn:aws:sts::374925447540:assumed-role/aws-refarch-cross-account-pipeline-service-role-2/AWSCLI-Session"
+}
+```
+# Finish
+
+tools_admin_deployer name should be used as profile name for [main script](../../single-click-cross-account-pipeline.sh) 
 
 # References
 
