@@ -86,6 +86,13 @@ git push AWSCodeCommit master
 
 #### 5. See the pipeline in action.
 
+Stages:
+- Source checkout
+- Build
+- Deploy to Test account
+- Approve Deploy to Production
+- Deploy to Production 
+
 ![](images//aws-cross-account-pipeline-schema.png)
 
 Once you have your pipeline configured [as per the blog post](https://aws.amazon.com/blogs/devops/aws-building-a-secure-cross-account-continuous-delivery-pipeline/) across your tools, development, test and production AWS accounts, codepipeline will listen for new deployments to your 'sample-lambda' repository. You can configure the pipeline by following the walkthrough in the blog post or by running the `single-click-cross-account-pipeline.sh` script in this repo. Once it's spun up, push a change to the CodeCommit repo you just made then log in to your tools AWS account to ensure your codepipeline execution has kicked off. 
