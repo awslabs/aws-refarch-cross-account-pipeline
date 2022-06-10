@@ -17,6 +17,10 @@ use [AWS CodeBuild](https://aws.amazon.com/codebuild/) to do application build, 
     * Development
     * Test
     * Production
+5. Create permissions for tools account (optional)
+
+If you want to create IAM user and role only for this particular deployment please follow the instructions from [Set up additional tools account permissions](Permissions-accounts-set-up/Tools/README.md)
+If your profile user has enough permissions, this step can be skipped. 
 
 #### 1. Create a sample application using Serverless Application Model (SAM). 
 
@@ -81,8 +85,57 @@ git push AWSCodeCommit master
 ```
 
 #### 5. See the pipeline in action.
+
+Stages:
+- Source checkout
+- Build
+- Deploy to Test account
+- Approve Deploy to Production
+- Deploy to Production 
+
+![](images//aws-cross-account-pipeline-schema.png)
+
 Once you have your pipeline configured [as per the blog post](https://aws.amazon.com/blogs/devops/aws-building-a-secure-cross-account-continuous-delivery-pipeline/) across your tools, development, test and production AWS accounts, codepipeline will listen for new deployments to your 'sample-lambda' repository. You can configure the pipeline by following the walkthrough in the blog post or by running the `single-click-cross-account-pipeline.sh` script in this repo. Once it's spun up, push a change to the CodeCommit repo you just made then log in to your tools AWS account to ensure your codepipeline execution has kicked off. 
 
 #### Next Steps
 * If you want to deploy a different type of application, you will need to edit the buildspec file defined in the [`code-pipeline.yaml`](https://github.com/awslabs/aws-refarch-cross-account-pipeline/blob/master/ToolsAcct/code-pipeline.yaml) file.
     * You will also need to change the permissions of the roles deployed to the test/dev accounts depending on what type of resources you are deploying. This is in the [`toolsacct-codepipeline-cloudformation-deployer.yaml`](https://github.com/awslabs/aws-refarch-cross-account-pipeline/blob/master/TestAccount/toolsacct-codepipeline-cloudformation-deployer.yaml#L74) file which gets deployed to the Test & Prod accounts in step 3 of the [blog instructions](https://aws.amazon.com/blogs/devops/aws-building-a-secure-cross-account-continuous-delivery-pipeline/).
+
+# Problems
+
+## No default region
+
+
+### Description
+
+After run command 
+
+```bash
+single-click-cross-account-pipeline.sh
+```
+Error log:
+
+You must specify a region. You can also configure your region by running "aws configure".
+
+Solution: 
+
+aws configure set region eu-west-1 --profile default 
+aws configure set region eu-west-1 --profile ${tools_account_id}
+aws configure set region eu-west-1 --profile ${dev_account_id}
+aws configure set region eu-west-1 --profile ${test_account_id}
+aws configure set region eu-west-1 --profile ${prod_account_id}
+
+## Access Denied
+
+Command:
+
+```bash
+single-click-cross-account-pipeline.sh
+```
+
+Error output:
+An error occurred (AccessDenied) when calling the DescribeStacks operation: User: arn:aws:sts::374925447540:assumed-role/AWSReservedSSO_AWSOrganizationsFullAccess_ebce3644c0d9b654/przs@tlen.pl is not authorized to perform: cloudformation:DescribeStacks on resource: arn:aws:cloudformation:eu-west-1:374925447540:stack/pre-reqs/* because no identity-based policy allows the cloudformation:DescribeStacks action
+
+Solution:
+
+Please follow the instructions from [Set up additional tools account permissions](Permissions-accounts-set-up/Tools/README.md)

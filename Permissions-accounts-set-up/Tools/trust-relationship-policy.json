@@ -1,0 +1,8 @@
+{
+    "Version": "2012-10-17",
+    "Statement": {
+        "Effect": "Allow",
+        "Principal": { "AWS": "arn:aws:iam::{YOUR_TOOLS_ACCOUNT_ID}:root" },
+        "Action": "sts:AssumeRole"
+    }
+}
